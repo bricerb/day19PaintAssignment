@@ -1,7 +1,9 @@
 package sample;
 
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.stage.Stage;
 import jodd.json.JsonParser;
 
 import java.io.*;
@@ -12,7 +14,6 @@ import java.net.Socket;
  */
 public class ConnectionHandler implements Runnable{
 
-    private GraphicsContext gc = null;
     private Stroke stroke = null;
 
     Socket connection = null;
@@ -46,25 +47,14 @@ public class ConnectionHandler implements Runnable{
 //        System.out.println(myServer.connection.getInetAddress().getHostAddress());
 
         String inputLine;
-        System.out.println(clientInput.readLine());
-        System.out.println(clientInput.readLine());
+//        System.out.println(inputLine);
 
         while ((inputLine = clientInput.readLine()) != null) {
-            System.out.println("test");
-            int counter = 2;
-            while(counter != 0) {
-                if ((inputLine.split("=")[0]).equals("gcSender=")) {
-                    gc = jsonRestoreGC((inputLine.split("=")[1]));
-                    counter--;
-                } else if ((inputLine.split("=")[0]).equals("strokeSender=")) {
-                    gc = jsonRestoreGC((inputLine.split("=")[1]));
-                    counter--;
-                }
-            }
-            myMain.startThirdStage(gc);
-            Platform.runLater(new RunnableGC(gc, stroke));
-            counter = 0;
+            Stroke currentStroke = jsonRestoreStroke((inputLine.split("=")[1]));
+            myMain
         }
+
+        chatDisplay.println("done");
 
 
 
@@ -90,13 +80,6 @@ public class ConnectionHandler implements Runnable{
                 }
             } */
         }
-
-    public GraphicsContext jsonRestoreGC(String jsonTD) {
-        JsonParser toDoItemParser = new JsonParser();
-        GraphicsContext item = toDoItemParser.parse(jsonTD, GraphicsContext.class);
-
-        return item;
-    }
 
     public Stroke jsonRestoreStroke(String jsonTD) {
         JsonParser toDoItemParser = new JsonParser();
