@@ -1,5 +1,7 @@
 package sample;
 
+import javafx.scene.canvas.GraphicsContext;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,17 +10,19 @@ import java.util.ArrayList;
 /**
  * Created by Brice on 8/25/16.
  */
-public class Server {
+public class Server{
 
-    public static void main(String[] args) {
-        Server myServer = new Server();
-        myServer.startServer();
-
-    }
+//    public static void main(String[] args) {
+//        Server myServer = new Server();
+//        myServer.startServer();
+//    }
 
     Socket connection = null;
+    GraphicsContext gc;
 
-    public Server () {}
+    public Server (GraphicsContext myGC) {
+        this.gc = myGC;
+    }
 
     public Server (Socket connection) {this.connection = connection;}
 
@@ -29,7 +33,7 @@ public class Server {
 
             while(true) {
                 Socket incConnection = listener.accept();
-                ConnectionHandler handler = new ConnectionHandler(incConnection);
+                ConnectionHandler handler = new ConnectionHandler(incConnection, gc);
                 Thread handlingThread = new Thread(handler);
                 handlingThread.start();
             }

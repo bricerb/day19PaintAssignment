@@ -14,13 +14,21 @@ import java.net.Socket;
  */
 public class ConnectionHandler implements Runnable{
 
-    private Stroke stroke = null;
+
+
+    boolean isConnected = true;
+
+    GraphicsContext gc;
 
     Socket connection = null;
 
-    public ConnectionHandler() {}
+    public ConnectionHandler() {
+    }
 
-    public ConnectionHandler(Socket incConnection) {this.connection = incConnection;}
+    public ConnectionHandler(Socket incConnection, GraphicsContext myGC) {
+        this.gc = myGC;
+        this.connection = incConnection;
+    }
 
     public void run() {
 
@@ -37,54 +45,42 @@ public class ConnectionHandler implements Runnable{
 
     public void handleIncomingConnection (Socket incClient) throws IOException{
 
-        Main myMain = new Main();
-        Server myServer = new Server();
-        BufferedReader clientInput = new BufferedReader(new InputStreamReader(incClient.getInputStream()));
-        PrintWriter chatDisplay = new PrintWriter(incClient.getOutputStream(), true);
+        try {
+            BufferedReader clientInput = new BufferedReader(new InputStreamReader(incClient.getInputStream()));
+            PrintWriter chatDisplay = new PrintWriter(incClient.getOutputStream(), true);
 
-        System.out.println(clientInput);
-        System.out.println(chatDisplay);
+            System.out.println(clientInput);
+            System.out.println(chatDisplay);
 //        System.out.println(myServer.connection.getInetAddress().getHostAddress());
 
-        String inputLine;
+            String inputLine;
 //        System.out.println(inputLine);
 
-        while ((inputLine = clientInput.readLine()) != null) {
-            Stroke currentStroke = jsonRestoreStroke((inputLine.split("=")[1]));
-            myMain
-        }
-
-        chatDisplay.println("done");
-
-
-
-
-
-/*        while ((inputLine = clientInput.readLine()) != null) {
-            if (message.getUserName() == null) {
-                if ((inputLine.split("=")[0]).equals("name")) {
-                    message.setUserName(inputLine.split("=")[1]);
-                    chatDisplay.println(message.getUserName());
-                    System.out.println(message.getUserName() + " has connected.");
-                    } else {
-                        chatDisplay.write("Invalid Input.");
-                    }
-                } else if (inputLine.equalsIgnoreCase("histoty")) {
-                    for (int counter = 0; counter < myServer.getMessages().size(); counter++)
-                        chatDisplay.println(myServer.getMessages().get(counter));
-                } else {
-
-                    System.out.println(message.getUserName() + " says: " + inputLine);
-                    chatDisplay.println(inputLine);
-                    messageHistoryToArray(inputLine);
+//            while ((inputLine = clientInput.readLine()) != null) {
+            while (isConnected) {
+//            Stroke currentStroke = jsonRestoreStroke((inputLine.split("=")[1]));
+                inputLine = clientInput.readLine();
+                if (inputLine.equalsIgnoreCase("stop")) {
+//                    isConnected = false;
                 }
-            } */
+                Stroke jsonRestoredStroke = jsonRestoreStroke((inputLine.split("=")[1]));
+                System.out.println("test");
+//                RunnableGC myRunnableGC = new RunnableGC(myMain.gc, jsonRestoredStroke);
+                System.out.println(jsonRestoredStroke.strokeX + " and " + jsonRestoredStroke.strokeY);
+
+                chatDisplay.println("received");
+                Platform.runLater(new RunnableGC(this.gc, jsonRestoredStroke));
+//            Platform.runLater(new RunnableGC(gc, stroke));
+//            }
+            }
+        } catch (Exception ex) {
+
         }
+    }
 
     public Stroke jsonRestoreStroke(String jsonTD) {
         JsonParser toDoItemParser = new JsonParser();
         Stroke item = toDoItemParser.parse(jsonTD, Stroke.class);
-
         return item;
     }
 

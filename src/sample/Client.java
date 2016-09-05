@@ -37,11 +37,6 @@ public class Client {
             System.out.println("type something else");
             out.println();
 
-            int counter = 0;
-            while(counter < 15) {
-                System.out.println(strokeString);
-                counter++;
-            }
 
 //            System.out.println("Type exit to exit.");
 //            System.out.println("Please enter your User Name");

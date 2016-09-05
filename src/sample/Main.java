@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
@@ -31,7 +32,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Main extends Application {
+public class Main extends Application{
 
     Stroke dataContainer;
 
@@ -47,7 +48,20 @@ public class Main extends Application {
     String sendingString;
     // Server Port 8005
 
+    static GraphicsContext gc;
     GraphicsContext gc2 = null;
+
+    public void run() {
+        main(null);
+    }
+
+//    public void start(Main myMain) {
+//        myMain.run();
+//        System.out.println("thread");
+//    }
+
+    public void start() {
+    }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -83,7 +97,7 @@ public class Main extends Application {
             public void handle(ActionEvent e) {
                 System.out.println("I can switch to another scene here ...");
 //                primaryStage.setScene(loginScene);
-                startSecondStage();
+//                startSecondStage();
             }
         });
 
@@ -91,6 +105,7 @@ public class Main extends Application {
             @Override
             public void handle(ActionEvent event) {
                 serverStart();
+
             }
         }));
 
@@ -106,7 +121,7 @@ public class Main extends Application {
         Canvas canvas = new Canvas(DEFAULT_SCENE_WIDTH, DEFAULT_SCENE_HEIGHT - 100);
 //        canvas.setFocusTraversable(true);
 
-        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc = canvas.getGraphicsContext2D();
 
 //        gc.setFill(Color.GREEN);
 //        gc.setStroke(Color.BLUE);
@@ -142,7 +157,6 @@ public class Main extends Application {
             public void handle(MouseEvent e) {
                 if (isDrawingFlag) {
                     if (e.isDragDetect()) {
-
 //                        System.out.println("x: " + e.getX() + ", y: " + e.getY());
                         gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
 //                gc.strokeOval(e.getX(), e.getY(), 10, 10); // default mouse tracking
@@ -157,8 +171,8 @@ public class Main extends Application {
 
                         if (isSharing) {
                             sendingString = jsonString;
+                            startClient();
                         }
-
 
                         if (gc2 != null) {
                             gc2.strokeOval(x - 5, y - 5, strokeSize, strokeSize);
@@ -169,6 +183,8 @@ public class Main extends Application {
                 }
             }
         });
+
+//            RunnableGC myRunner = new RunnableGC(gc, currentStroke);
 
         grid.add(canvas, 0, 2);
 //        grid.add(canvas, 0, 2, 2, 1); // sets colspan and rowspan to be bigger
@@ -232,9 +248,7 @@ public class Main extends Application {
         launch(args);}
 
     public static void serverStart() {
-        System.out.println("Running");
-
-        Server myServer = new Server();
+        Server myServer = new Server(gc);
         myServer.startServer();
     }
 
@@ -252,13 +266,22 @@ public class Main extends Application {
         return jsonString;
     }
 
+    public Stroke jsonRestoreStroke(String jsonTD) {
+        JsonParser toDoItemParser = new JsonParser();
+        Stroke item = toDoItemParser.parse(jsonTD, Stroke.class);
+        currentStroke = item;
+        return item;
+    }
 
-
+    public GraphicsContext jsonRestoreGC(String jsonTD) {
+        JsonParser toDoItemParser = new JsonParser();
+        GraphicsContext item = toDoItemParser.parse(jsonTD, GraphicsContext.class);
+        gc = item;
+        return item;
+    }
 
     public void startClient() {
         Scanner inputScanner = new Scanner(System.in);
-
-        System.out.println("Running");
 
         try {
             Socket clientSocket = new Socket("localhost", 8005);
@@ -267,7 +290,6 @@ public class Main extends Application {
 //            Socket clientSocket = new Socket ("10.0.0.138", 8080); // Yehia
 //            Socket clientSocket = new Socket ("10.0.0.132", 8585); // Donald
 //            Socket clientSocket = new Socket ("10.0.0.134", 8005); // Brett
-            System.out.println("Connected to Server");
 
 
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -277,10 +299,17 @@ public class Main extends Application {
 
 //                out.println();
 //                out.println("gcSender=" + jsonStringGeneratorGC(gc2));
+//            while (isDrawingFlag) {
+                System.out.println("works");
                 out.println("strokeSender=" + jsonStringGeneratorStroke(currentStroke));
+                System.out.println("test");
+                String serverRespone = in.readLine();
+                System.out.println(serverRespone);
+//                if (serverRespone.equals("stop")) {
+//                    isDrawingFlag = !isDrawingFlag;
+//                }
+//            }
 
-            String serverRespone = in.readLine();
-            System.out.println(serverRespone);
 
 
 //            System.out.println("Type exit to exit.");
@@ -312,5 +341,8 @@ public class Main extends Application {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void Main () {
     }
 }

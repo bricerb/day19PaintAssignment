@@ -16,6 +16,8 @@ public class RunnableGC implements Runnable {
     }
 
     public void run() {
+        System.out.println("derp");
+
         gc.strokeOval(stroke.strokeX, stroke.strokeY, stroke.strokeSize, stroke.strokeSize); // <---- this is the actual work we need to do
     }
 }
