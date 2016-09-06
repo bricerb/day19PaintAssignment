@@ -26,11 +26,12 @@ public class Server implements Runnable {
     Socket connection = null;
     GraphicsContext gc;
     boolean isConnected = true;
+    Main main = null;
 
-    public Server (GraphicsContext myGC) {
-//    public Server (Main myMain) {
-        this.gc = myGC;
-//        this.main = myMain;
+//    public Server (GraphicsContext myGC) {
+    public Server (Main myMain) {
+//        this.gc = myGC;
+        this.main = myMain;
     }
 
     @Override
@@ -64,7 +65,6 @@ public class Server implements Runnable {
     public class ConnectionHandler implements Runnable {
 
         GraphicsContext gc;
-        Main main;
 
         Socket connection = null;
 
@@ -100,16 +100,14 @@ public class Server implements Runnable {
                 String inputLine;
 
                 inputLine = clientInput.readLine();
-                if (inputLine.equals("serverStop")) {
-                    connection.close();
-                    isConnected = false;
-                }
 
-                Stroke jsonRestoredStroke = jsonRestoreStroke((inputLine.split("=")[1]));
+                Stroke jsonRestoredStroke = jsonRestoreStroke(inputLine);
 
                 chatDisplay.println("received");
 
-                Platform.runLater(new RunnableGC(this.gc, jsonRestoredStroke));
+                serverList(jsonRestoredStroke);
+
+                Platform.runLater(new RunnableGC(main.gc, jsonRestoredStroke));
             } catch (Exception ex) {
 
             }
@@ -132,9 +130,15 @@ public class Server implements Runnable {
             }
 
             public void run() {
+
+
                 gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
                 gc.strokeOval(stroke.strokeX, stroke.strokeY, stroke.strokeSize, stroke.strokeSize); // <---- this is the actual work we need to do
             }
+        }
+
+        public void serverList (Stroke currentStroke) {
+            main.myList.addToStrokeArrayList(currentStroke);
         }
     }
 

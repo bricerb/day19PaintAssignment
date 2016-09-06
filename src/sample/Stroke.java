@@ -1,5 +1,7 @@
 package sample;
 
+import javafx.scene.paint.Color;
+
 /**
  * Created by Brice on 9/1/16.
  */
@@ -40,4 +42,5 @@ public class Stroke {
     public void setStrokeSize(double strokeSize) {
         this.strokeSize = strokeSize;
     }
+
 }

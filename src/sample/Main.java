@@ -25,11 +25,9 @@ import javafx.stage.Stage;
 import jodd.json.JsonParser;
 import jodd.json.JsonSerializer;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main extends Application{
@@ -37,16 +35,17 @@ public class Main extends Application{
     Stroke dataContainer;
 
     final double DEFAULT_SCENE_WIDTH = 800;
-    final double DEFAULT_SCENE_HEIGHT = 600;
+    final double DEFAULT_SCENE_HEIGHT = 800;
     double strokeSize = 1;
     boolean isDrawingFlag = true;
     double x;
     double y;
+    StrokeList myList = new StrokeList();
 
     boolean isSharing = false;
     Stroke currentStroke;
     String sendingString;
-    // Server Port 8005
+//     Server Port 8005
 
     static GraphicsContext gc;
     GraphicsContext gc2 = null;
@@ -86,12 +85,15 @@ public class Main extends Application{
         Button button1 = new Button("KEEL MEH NAO (Server)");
         Button button3 = new Button("DU ET! (Server Stop)");
         Button button2 = new Button("GIT TUU DI CHOPPA'! NAO! (Client)");
+        Button button4 = new Button("THA GAGGLES DUU NATHING!");
         HBox hbButton = new HBox(10);
         hbButton.setAlignment(Pos.TOP_LEFT);
         hbButton.getChildren().add(button);
         hbButton.getChildren().add(button1);
         hbButton.getChildren().add(button3);
         hbButton.getChildren().add(button2);
+        hbButton.getChildren().add(button4);
+
         grid.add(hbButton, 0, 1);
 
         button.setOnAction(new EventHandler<ActionEvent>() {
@@ -112,13 +114,13 @@ public class Main extends Application{
             }
         }));
 
-        button3.setOnAction((new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-               isSharing = false;
-                stopServer();
-            }
-        }));
+//        button3.setOnAction((new EventHandler<ActionEvent>() {
+//            @Override
+//            public void handle(ActionEvent event) {
+//               isSharing = false;
+//                stopServer();
+//            }
+//        }));
 
         button2.setOnAction((new EventHandler<ActionEvent>() {
             @Override
@@ -126,6 +128,18 @@ public class Main extends Application{
                 isDrawingFlag = true;
                 startClient();
                 isSharing = true;
+            }
+        }));
+
+        button4.setOnAction((new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                // redraw all strokes
+                readFromFile();
+                for (Stroke currentStroke : myList.getStrokeArrayList()) {
+                    gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
+                    gc.strokeOval(currentStroke.strokeX, currentStroke.strokeY, currentStroke.strokeSize, currentStroke.strokeSize);
+                }
             }
         }));
 
@@ -137,7 +151,7 @@ public class Main extends Application{
 
 //        gc.setFill(Color.GREEN);
 //        gc.setStroke(Color.BLUE);
-        gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
+        Color color = Color.color(Math.random(), Math.random(), Math.random());
         gc.setLineWidth(2);
 
         grid.setOnKeyPressed(new EventHandler<KeyEvent>() {
@@ -147,6 +161,9 @@ public class Main extends Application{
 
                 if (e.getText().equalsIgnoreCase("d")) {
                     isDrawingFlag = !isDrawingFlag;
+                }
+                if (e.getText().equalsIgnoreCase("c")) {
+                    gc.clearRect(0, 0, DEFAULT_SCENE_WIDTH, DEFAULT_SCENE_HEIGHT);
                 }
                 if (e.getCode() == KeyCode.UP) {
                     strokeSize += 1;
@@ -177,6 +194,8 @@ public class Main extends Application{
                         y = e.getY();
 
                         currentStroke = new Stroke(e.getX(), e.getY(), strokeSize);
+
+                        myList.addToStrokeArrayList(currentStroke);
 
                         String jsonString = jsonStringGeneratorStroke(currentStroke);
 //                        System.out.println(jsonStringGenerator(currentStroke));
@@ -260,8 +279,8 @@ public class Main extends Application{
         launch(args);}
 
     public void serverStart() {
-        Server myServer = new Server(gc);
-//        Server myServer = new Server(this);
+//        Server myServer = new Server(gc);
+        Server myServer = new Server(this);
         Thread handlingThread = new Thread(myServer);
         handlingThread.start();
     }
@@ -269,6 +288,13 @@ public class Main extends Application{
     public String jsonStringGeneratorStroke(Stroke currentStroke) {
         JsonSerializer jsonSerializer = new JsonSerializer().deep(true);
         String jsonString = jsonSerializer.serialize(currentStroke);
+
+        return jsonString;
+    }
+
+    public String jsonStringGeneratorList(StrokeList currentList) {
+        JsonSerializer jsonSerializer = new JsonSerializer().deep(true);
+        String jsonString = jsonSerializer.serialize(currentList);
 
         return jsonString;
     }
@@ -294,11 +320,18 @@ public class Main extends Application{
         return item;
     }
 
+    public StrokeList jsonRestoreList(String jsonTD) {
+        JsonParser toDoItemParser = new JsonParser();
+        StrokeList item = toDoItemParser.parse(jsonTD, StrokeList.class);
+        return item;
+    }
+
     public void startClient() {
         Scanner inputScanner = new Scanner(System.in);
 
         try {
             Socket clientSocket = new Socket("localhost", 8005);
+//            Socket clientSocket = new Socket("10.0.0.141", 8005); // Dom
 //            Socket clientSocket = new Socket("10.0.0.126", 8024); // Rebecca
 //            Socket clientSocket = new Socket ("10.0.0.136", 8080); // Jessica
 //            Socket clientSocket = new Socket ("10.0.0.138", 8080); // Yehia
@@ -309,7 +342,7 @@ public class Main extends Application{
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-                out.println("strokeSender=" + jsonStringGeneratorStroke(currentStroke));
+                out.println(jsonStringGeneratorStroke(currentStroke));
                 String serverRespone = in.readLine();
 //
             clientSocket.close();
@@ -334,5 +367,43 @@ public class Main extends Application{
 
 
     public void Main () {
+    }
+
+    public void writeUserFile() {
+        FileWriter writeToFile = null;
+        try {
+            File userFile = new File("List.json");
+            writeToFile = new FileWriter(userFile);
+
+            writeToFile.write(jsonStringGeneratorList(myList));
+
+            writeToFile.close();
+
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        } finally {
+            if (writeToFile != null) {
+                try {
+                    writeToFile.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void readFromFile () {
+        try {
+            File userFile = new File("List.json");
+            if (userFile.exists()) {
+            Scanner fileScanner = new Scanner(userFile);
+
+            while (fileScanner.hasNextLine()) {
+                String scanString = fileScanner.nextLine();
+                myList = jsonRestoreList(scanString);
+                }
+            }
+        } catch (Exception exception) {
+        }
     }
 }
