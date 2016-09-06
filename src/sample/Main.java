@@ -83,12 +83,14 @@ public class Main extends Application{
         grid.add(sceneTitle, 0, 0);
 
         Button button = new Button("Sample paint button");
-        Button button1 = new Button("KEEL MEH NAO");
-        Button button2 = new Button("GIT TUU DI CHOPPA'! NAO!");
+        Button button1 = new Button("KEEL MEH NAO (Server)");
+        Button button3 = new Button("DU ET! (Server Stop)");
+        Button button2 = new Button("GIT TUU DI CHOPPA'! NAO! (Client)");
         HBox hbButton = new HBox(10);
         hbButton.setAlignment(Pos.TOP_LEFT);
         hbButton.getChildren().add(button);
         hbButton.getChildren().add(button1);
+        hbButton.getChildren().add(button3);
         hbButton.getChildren().add(button2);
         grid.add(hbButton, 0, 1);
 
@@ -97,21 +99,31 @@ public class Main extends Application{
             public void handle(ActionEvent e) {
                 System.out.println("I can switch to another scene here ...");
 //                primaryStage.setScene(loginScene);
-//                startSecondStage();
+                startSecondStage();
             }
         });
 
         button1.setOnAction((new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                isDrawingFlag = false;
                 serverStart();
 
+            }
+        }));
+
+        button3.setOnAction((new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+               isSharing = false;
+                stopServer();
             }
         }));
 
         button2.setOnAction((new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
+                isDrawingFlag = true;
                 startClient();
                 isSharing = true;
             }
@@ -247,9 +259,11 @@ public class Main extends Application{
     public static void main(String[] args) {
         launch(args);}
 
-    public static void serverStart() {
+    public void serverStart() {
         Server myServer = new Server(gc);
-        myServer.startServer();
+//        Server myServer = new Server(this);
+        Thread handlingThread = new Thread(myServer);
+        handlingThread.start();
     }
 
     public String jsonStringGeneratorStroke(Stroke currentStroke) {
@@ -295,53 +309,29 @@ public class Main extends Application{
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-//            out.println("gcSender=" + jsonStringGeneratorGC(gc2));
-
-//                out.println();
-//                out.println("gcSender=" + jsonStringGeneratorGC(gc2));
-//            while (isDrawingFlag) {
-                System.out.println("works");
                 out.println("strokeSender=" + jsonStringGeneratorStroke(currentStroke));
-                System.out.println("test");
                 String serverRespone = in.readLine();
-                System.out.println(serverRespone);
-//                if (serverRespone.equals("stop")) {
-//                    isDrawingFlag = !isDrawingFlag;
-//                }
-//            }
-
-
-
-//            System.out.println("Type exit to exit.");
-//            System.out.println("Please enter your User Name");
-//            String nameInput = inputScanner.nextLine();
-//            out.println("name=" + nameInput);
-
-//            String clientMessage = ("name=" + inputScanner.nextLine());
-
-//            while(true) {
-
-
-//                out.println();
-
-//                String clientMessage = inputScanner.nextLine();
-//                if(clientMessage.equals("exit")) {
-//                    break;
-//                }
-//                out.println(clientMessage);
-//                System.out.println(in.readLine());
-//                out.println(in.readLine());
 //
-//            out.println("I regret nothing... IN BRICE WE TRUST");
-//
-//                String serverRespone = in.readLine();
-//            }
-
             clientSocket.close();
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
+
+    public void stopServer() {
+        Scanner inputScanner = new Scanner(System.in);
+        try{
+            Socket clientSocket = new Socket("localhost", 8005);
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+            out.println("serverStop");
+
+            clientSocket.close();
+
+        } catch (Exception ex) {
+
+        }
+    }
+
 
     public void Main () {
     }
