@@ -45,6 +45,10 @@ public class Main extends Application{
     boolean isSharing = false;
     Stroke currentStroke;
     String sendingString;
+
+    double colorR;
+    double colorG;
+    double colorB;
 //     Server Port 8005
 
     static GraphicsContext gc;
@@ -187,13 +191,18 @@ public class Main extends Application{
                 if (isDrawingFlag) {
                     if (e.isDragDetect()) {
 //                        System.out.println("x: " + e.getX() + ", y: " + e.getY());
-                        gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
+
+                        colorR = randomColorGenerator();
+                        colorG = randomColorGenerator();
+                        colorB = randomColorGenerator();
+
+                        gc.setStroke(Color.color(colorR, colorG, colorB));
 //                gc.strokeOval(e.getX(), e.getY(), 10, 10); // default mouse tracking
                         gc.strokeOval(e.getX() - 5, e.getY() - 5, strokeSize, strokeSize);
                         x = e.getX();
                         y = e.getY();
 
-                        currentStroke = new Stroke(e.getX(), e.getY(), strokeSize);
+                        currentStroke = new Stroke(e.getX(), e.getY(), strokeSize, colorR, colorG, colorB);
 
                         myList.addToStrokeArrayList(currentStroke);
 
@@ -405,5 +414,10 @@ public class Main extends Application{
             }
         } catch (Exception exception) {
         }
+    }
+
+    public double randomColorGenerator() {
+        double RNG = Math.random();
+        return RNG;
     }
 }

@@ -132,7 +132,7 @@ public class Server implements Runnable {
             public void run() {
 
 
-                gc.setStroke(Color.color(Math.random(), Math.random(), Math.random()));
+                gc.setStroke(Color.color(stroke.colorR, stroke.colorG, stroke.colorB));
                 gc.strokeOval(stroke.strokeX, stroke.strokeY, stroke.strokeSize, stroke.strokeSize); // <---- this is the actual work we need to do
             }
         }
